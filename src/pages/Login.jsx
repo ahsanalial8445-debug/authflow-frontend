@@ -81,11 +81,11 @@ const Login = () => {
         </Button>
       </form>
 
-      <p className="mt-8 text-center text-sm text-slate-400">
+      <p className="mt-8 text-center text-sm text-slate-600">
         Don't have an account?{" "}
         <Link
           to="/register"
-          className="font-semibold text-brand-400 hover:text-brand-300 transition-colors hover:underline underline-offset-4"
+          className="font-semibold text-brand-700 hover:text-brand-800 transition-colors hover:underline underline-offset-4"
         >
           Create one free
         </Link>

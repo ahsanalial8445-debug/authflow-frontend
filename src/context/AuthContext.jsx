@@ -11,9 +11,7 @@ import {
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUserState] = useState(
-    getUser() || { name: "John Doe", email: "john@example.com" }
-  );
+  const [user, setUserState] = useState(getUser());
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

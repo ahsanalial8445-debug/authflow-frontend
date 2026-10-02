@@ -11,15 +11,15 @@ const Button = ({
   className = "",
 }) => {
   const base =
-    "relative w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900";
+    "relative w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white";
 
   const variants = {
     primary:
-      "bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-lg shadow-brand-600/25 hover:shadow-xl hover:shadow-brand-600/40 hover:brightness-110 btn-shine",
+      "bg-brand-600 text-white shadow-sm hover:bg-brand-700 hover:shadow-md btn-shine",
     ghost:
-      "bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 hover:border-white/20",
+      "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300",
     danger:
-      "bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20 hover:border-red-500/50",
+      "bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 hover:border-red-300",
   };
 
   return (

@@ -6,12 +6,12 @@ const Alert = ({ type = "error", message, onClose }) => {
   const styles = {
     error: {
       container:
-        "bg-red-500/10 border-red-500/30 text-red-300",
+        "bg-red-50 border-red-200 text-red-800",
       icon: <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />,
     },
     success: {
       container:
-        "bg-emerald-500/10 border-emerald-500/30 text-emerald-300",
+        "bg-emerald-50 border-emerald-200 text-emerald-800",
       icon: <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />,
     },
   };
@@ -29,7 +29,7 @@ const Alert = ({ type = "error", message, onClose }) => {
         <button
           type="button"
           onClick={onClose}
-          className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+          className="shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity"
           aria-label="Dismiss"
         >
           <X className="w-4 h-4" />
