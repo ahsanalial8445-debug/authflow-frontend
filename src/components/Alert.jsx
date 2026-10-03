@@ -6,12 +6,12 @@ const Alert = ({ type = "error", message, onClose }) => {
   const styles = {
     error: {
       container:
-        "bg-red-50 border-red-200 text-red-800",
+        "bg-red-50 border-red-200 text-red-800 shadow-sm",
       icon: <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />,
     },
     success: {
       container:
-        "bg-emerald-50 border-emerald-200 text-emerald-800",
+        "bg-emerald-50 border-emerald-200 text-emerald-800 shadow-sm",
       icon: <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />,
     },
   };
@@ -21,7 +21,7 @@ const Alert = ({ type = "error", message, onClose }) => {
   return (
     <div
       role="alert"
-      className={`animate-fadeIn flex items-start gap-3 p-3.5 rounded-xl border text-sm ${style.container}`}
+      className={`animate-fadeIn flex items-start gap-3 p-4 rounded-xl border text-sm leading-5 ${style.container}`}
     >
       {style.icon}
       <p className="flex-1 leading-relaxed">{message}</p>

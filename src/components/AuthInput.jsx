@@ -58,18 +58,19 @@ const AuthInput = ({
           placeholder={placeholder}
           disabled={disabled}
           autoComplete={autoComplete}
+          required={required}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
-          className={`w-full py-3 ${icon ? "pl-12" : "pl-4"} ${
+          className={`auth-field w-full min-h-12 py-3 ${icon ? "pl-12" : "pl-4"} ${
             isPassword ? "pr-12" : "pr-4"
-          } rounded-lg bg-white text-slate-900 placeholder-slate-400 border border-slate-200
+          } rounded-xl bg-white text-sm text-slate-900 placeholder-slate-400 border border-slate-200
             transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
             ${
               error
-                ? "border-red-400 bg-red-50"
+                ? "border-red-400 bg-red-50/70"
                 : focused
-                  ? "border-brand-500 ring-4 ring-indigo-100"
-                  : "hover:border-slate-300"
+                  ? "border-brand-500 bg-white ring-4 ring-brand-100/80"
+                  : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
             }`}
         />
 
@@ -77,11 +78,13 @@ const AuthInput = ({
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             aria-label={showPassword ? "Hide password" : "Show password"}
             tabIndex={0}
           >
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            <span key={showPassword ? "visible" : "hidden"} className="password-icon">
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </span>
           </button>
         )}
       </div>
