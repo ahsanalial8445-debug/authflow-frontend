@@ -8,9 +8,12 @@ import {
   X,
   LogIn,
   UserPlus,
+  Bell,
   Moon,
   Sun,
   ChevronDown,
+  Settings,
+  UserRound,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { ACCENT_THEMES } from "../context/theme";
@@ -187,6 +190,13 @@ const Navbar = () => {
               <div className="hidden lg:block">
                 {themeControl()}
               </div>
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-500"
+                title="Notifications are not available yet"
+                aria-label="Notifications are not available yet"
+              >
+                <Bell className="h-4 w-4" />
+              </span>
 
               {/* User Profile */}
               <div
@@ -245,6 +255,24 @@ const Navbar = () => {
                       </div>
                     </div>
 
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                      role="menuitem"
+                    >
+                      <UserRound className="h-4 w-4 text-slate-400" />
+                      Profile
+                    </Link>
+                    <Link
+                      to="/settings"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                      role="menuitem"
+                    >
+                      <Settings className="h-4 w-4 text-slate-400" />
+                      Settings
+                    </Link>
                     <button
                       type="button"
                       onClick={handleLogout}
@@ -355,6 +383,23 @@ const Navbar = () => {
                     </div>
                   </div>
                 </div>
+
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  <UserRound className="h-4 w-4 text-slate-400" />
+                  Profile
+                </Link>
+                <Link
+                  to="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  <Settings className="h-4 w-4 text-slate-400" />
+                  Settings
+                </Link>
 
                 {/* Logout Button */}
                 <button

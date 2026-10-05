@@ -10,36 +10,30 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [taskStats, setTaskStats] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [taskError, setTaskError] = useState("");
 
   useEffect(() => {
     let isActive = true;
 
-    api
-      .get("/tasks")
-      .then(({ data }) => {
+    Promise.all([
+      api.get("/tasks/stats"),
+      api.get("/tasks", { params: { limit: 4, sort: "newest" } }),
+    ])
+      .then(([{ data: statsData }, { data: tasksData }]) => {
         if (!isActive) return;
 
-        const tasks = Array.isArray(data.tasks) ? data.tasks : [];
-
-        setTaskStats({
-          total: tasks.length,
-          pending: tasks.filter(
-            (task) => task.status === "Pending"
-          ).length,
-          inProgress: tasks.filter(
-            (task) => task.status === "In Progress"
-          ).length,
-          completed: tasks.filter(
-            (task) => task.status === "Completed"
-          ).length,
-        });
+        const tasks = Array.isArray(tasksData.tasks) ? tasksData.tasks : [];
+        setTasks(tasks);
+        setTaskStats(statsData.stats);
       })
       .catch(() => {
         if (isActive) {
@@ -60,35 +54,42 @@ const Dashboard = () => {
   const taskCards = [
     {
       label: "Total Tasks",
-      value: taskStats?.total,
+      value: taskStats?.totalTasks,
       icon: <ListTodo className="h-5 w-5" />,
       iconStyle: "bg-brand-50 text-brand-600",
     },
     {
       label: "Pending",
-      value: taskStats?.pending,
+      value: taskStats?.pendingTasks,
       icon: <Circle className="h-5 w-5" />,
       iconStyle: "bg-amber-50 text-amber-600",
     },
     {
       label: "In Progress",
-      value: taskStats?.inProgress,
+      value: taskStats?.inProgressTasks,
       icon: <Clock3 className="h-5 w-5" />,
       iconStyle: "bg-sky-50 text-sky-600",
     },
     {
       label: "Completed",
-      value: taskStats?.completed,
+      value: taskStats?.completedTasks,
       icon: <CheckCircle2 className="h-5 w-5" />,
       iconStyle: "bg-emerald-50 text-emerald-600",
     },
   ];
 
-  const total = taskStats?.total || 0;
-  const completed = taskStats?.completed || 0;
+  const completionPercentage = taskStats?.completionPercentage || 0;
+  const greeting = "Welcome back";
+  const recentTasks = tasks.slice(0, 4);
 
-  const completionPercentage =
-    total > 0 ? Math.round((completed / total) * 100) : 0;
+  const formatDate = (value) =>
+    value
+      ? new Date(value).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "No due date";
 
   return (
     <main className="min-h-[calc(100vh-4.5rem)] bg-slate-50 text-slate-900">
@@ -97,21 +98,17 @@ const Dashboard = () => {
         {/* Header */}
         <section className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="mb-1 text-sm font-semibold text-brand-600">
-              Task Manager
-            </p>
-
             <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-              Dashboard
+              {greeting}, {user?.name || "there"} 👋
             </h1>
 
             <p className="mt-2 text-sm text-slate-500 sm:text-base">
-              Manage your tasks, track your progress, and stay productive.
+              Here's what's happening with your tasks.
             </p>
           </div>
 
           <button
-            onClick={() => navigate("/tasks")}
+            onClick={() => navigate("/tasks", { state: { openCreate: true } })}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-brand-700 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
           >
             <Plus className="h-4 w-4" />
@@ -223,7 +220,7 @@ const Dashboard = () => {
                 <span className="text-sm font-bold text-slate-900">
                   {tasksLoading
                     ? "..."
-                    : taskStats?.pending ?? 0}
+                    : taskStats?.pendingTasks ?? 0}
                 </span>
               </div>
 
@@ -242,7 +239,7 @@ const Dashboard = () => {
                 <span className="text-sm font-bold text-slate-900">
                   {tasksLoading
                     ? "..."
-                    : taskStats?.inProgress ?? 0}
+                    : taskStats?.inProgressTasks ?? 0}
                 </span>
               </div>
 
@@ -261,7 +258,7 @@ const Dashboard = () => {
                 <span className="text-sm font-bold text-slate-900">
                   {tasksLoading
                     ? "..."
-                    : taskStats?.completed ?? 0}
+                    : taskStats?.completedTasks ?? 0}
                 </span>
               </div>
 
@@ -293,31 +290,57 @@ const Dashboard = () => {
           </section>
         </div>
 
-        {/* Bottom CTA */}
-        <section className="mt-6 overflow-hidden rounded-2xl bg-slate-900 p-6 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-brand-300">
-                Stay Productive
-              </p>
-
-              <h2 className="mt-1 text-xl font-bold text-white">
-                Keep your tasks organized and get things done.
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-400">
-                Your task progress is just one click away.
-              </p>
+              <h2 className="text-lg font-bold text-slate-950">Recent Tasks</h2>
+              <p className="mt-1 text-sm text-slate-500">Your latest work, from your task list.</p>
             </div>
-
-            <button
-              onClick={() => navigate("/tasks")}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition-all hover:bg-slate-100"
-            >
-              View Tasks
-              <ArrowRight className="h-4 w-4" />
+            <button onClick={() => navigate("/tasks")} className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
+              View All Tasks <ArrowRight className="h-4 w-4" />
             </button>
           </div>
+          {tasksLoading ? (
+            <div role="status" className="space-y-3" aria-label="Loading recent tasks">
+              {[0, 1, 2].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
+            </div>
+          ) : taskError ? (
+            <p role="alert" className="rounded-xl bg-red-50 px-4 py-6 text-center text-sm text-red-700">{taskError}</p>
+          ) : recentTasks.length ? (
+            <div className="divide-y divide-slate-100">
+              {recentTasks.map((task) => (
+                <div key={task._id} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">{task.title}</p>
+                    <p className="mt-1 text-xs text-slate-500">Due {formatDate(task.dueDate)} · {task.priority} priority</p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    task.status === "Completed"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : task.status === "In Progress"
+                        ? "bg-sky-50 text-sky-700"
+                        : "bg-amber-50 text-amber-700"
+                  }`}>{task.status}</span>
+                  <button
+                    onClick={() => navigate("/tasks", { state: { selectedTaskId: task._id } })}
+                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand-700"
+                    aria-label={`View ${task.title}`}
+                    title="View task"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl bg-slate-50 px-4 py-8 text-center">
+              <p className="font-semibold text-slate-800">No tasks yet</p>
+              <p className="mt-1 text-sm text-slate-500">Create your first task to get started.</p>
+              <button onClick={() => navigate("/tasks", { state: { openCreate: true } })} className="mt-4 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
+                Create Task
+              </button>
+            </div>
+          )}
         </section>
 
       </div>

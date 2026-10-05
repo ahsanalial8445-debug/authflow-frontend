@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
       const token = getToken();
       if (!token) return;
       try {
-        const { data } = await api.get("/auth/me");
+        const { data } = await api.get("/users/profile");
         setUserState(data.user);
         setUser(data.user);
       } catch (err) {
@@ -51,6 +51,13 @@ export const AuthProvider = ({ children }) => {
     setUserState(null);
   };
 
+  const updateProfile = async (profile) => {
+    const { data } = await api.put("/users/profile", profile);
+    setUser(data.user);
+    setUserState(data.user);
+    return data.user;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -60,6 +67,7 @@ export const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
+        updateProfile,
       }}
     >
       {children}

@@ -1,17 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   Check,
   CircleAlert,
   ClipboardList,
   Clock3,
+  Eye,
+  LayoutGrid,
   ListTodo,
   Plus,
   Search,
   SquarePen,
   Trash2,
   X,
+  List,
+  CheckCircle2,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import api from "../api/axios";
 import Button from "../components/Button";
 
@@ -32,75 +37,136 @@ const formatDate = (value) => {
   });
 };
 
-const fetchTasks = async () => {
-  const { data } = await api.get("/tasks");
-  return data.tasks;
+const fetchTasks = async (params) => {
+  const { data } = await api.get("/tasks", { params });
+  return data;
+};
+
+const fetchTaskStats = async () => {
+  const { data } = await api.get("/tasks/stats");
+  return data.stats;
 };
 
 const TaskManager = () => {
+  const location = useLocation();
+  const consumedLocationState = useRef(null);
+  const taskRequestId = useRef(0);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(null);
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(() => Boolean(location.state?.openCreate));
   const [form, setForm] = useState(EMPTY_FORM);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All statuses");
   const [priorityFilter, setPriorityFilter] = useState("All priorities");
+  const [sortBy, setSortBy] = useState("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 0,
+    totalTasks: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const [taskStats, setTaskStats] = useState(null);
+  const [viewMode, setViewMode] = useState("list");
+  const [detailsTask, setDetailsTask] = useState(null);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
+    const requestId = ++taskRequestId.current;
     try {
-      const loadedTasks = await fetchTasks();
+      const params = {
+        page: currentPage,
+        limit: 10,
+        sort: sortBy,
+      };
+      if (search.trim()) params.search = search.trim();
+      if (statusFilter !== "All statuses") params.status = statusFilter;
+      if (priorityFilter !== "All priorities") params.priority = priorityFilter;
+      const data = await fetchTasks(params);
+      if (requestId !== taskRequestId.current) return;
       setError("");
-      setTasks(loadedTasks);
+      setTasks(data.tasks);
+      setPagination(data);
+      setCurrentPage(data.currentPage);
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to load your tasks.");
+      if (requestId === taskRequestId.current) {
+        setError(requestError.response?.data?.message || "Unable to load your tasks.");
+      }
     } finally {
-      setLoading(false);
+      if (requestId === taskRequestId.current) setLoading(false);
     }
-  };
+  }, [currentPage, priorityFilter, search, sortBy, statusFilter]);
+
+  useEffect(() => {
+    const requestId = ++taskRequestId.current;
+    let isActive = true;
+    const params = {
+      page: currentPage,
+      limit: 10,
+      sort: sortBy,
+    };
+    if (search.trim()) params.search = search.trim();
+    if (statusFilter !== "All statuses") params.status = statusFilter;
+    if (priorityFilter !== "All priorities") params.priority = priorityFilter;
+
+    fetchTasks(params)
+      .then((data) => {
+        if (!isActive || requestId !== taskRequestId.current) return;
+        setError("");
+        setTasks(data.tasks);
+        setPagination(data);
+        setCurrentPage(data.currentPage);
+      })
+      .catch((requestError) => {
+        if (isActive && requestId === taskRequestId.current) {
+          setError(requestError.response?.data?.message || "Unable to load your tasks.");
+        }
+      })
+      .finally(() => {
+        if (isActive && requestId === taskRequestId.current) setLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentPage, priorityFilter, search, sortBy, statusFilter]);
 
   useEffect(() => {
     let isActive = true;
-    fetchTasks()
-      .then((loadedTasks) => {
-        if (isActive) setTasks(loadedTasks);
+    fetchTaskStats()
+      .then((stats) => {
+        if (isActive) setTaskStats(stats);
       })
       .catch((requestError) => {
-        if (isActive) setError(requestError.response?.data?.message || "Unable to load your tasks.");
-      })
-      .finally(() => {
-        if (isActive) setLoading(false);
+        if (isActive) {
+          setError(requestError.response?.data?.message || "Unable to load task statistics.");
+        }
       });
     return () => {
       isActive = false;
     };
   }, []);
 
-  const counts = useMemo(
-    () => ({
-      total: tasks.length,
-      pending: tasks.filter((task) => task.status === "Pending").length,
-      inProgress: tasks.filter((task) => task.status === "In Progress").length,
-      completed: tasks.filter((task) => task.status === "Completed").length,
-    }),
-    [tasks]
-  );
+  const loadStats = async () => {
+    try {
+      setTaskStats(await fetchTaskStats());
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to load task statistics.");
+    }
+  };
 
-  const filteredTasks = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return tasks.filter((task) => {
-      const matchesSearch =
-        !query ||
-        task.title.toLowerCase().includes(query) ||
-        task.description.toLowerCase().includes(query);
-      const matchesStatus = statusFilter === "All statuses" || task.status === statusFilter;
-      const matchesPriority = priorityFilter === "All priorities" || task.priority === priorityFilter;
-      return matchesSearch && matchesStatus && matchesPriority;
-    });
-  }, [tasks, search, statusFilter, priorityFilter]);
+  const counts = {
+    total: taskStats?.totalTasks || 0,
+    pending: taskStats?.pendingTasks || 0,
+    inProgress: taskStats?.inProgressTasks || 0,
+    completed: taskStats?.completedTasks || 0,
+  };
+  const filteredTasks = tasks;
+  const sortedTasks = tasks;
 
   const beginCreate = () => {
     setActiveTaskId(null);
@@ -135,7 +201,8 @@ const TaskManager = () => {
     setError("");
     try {
       const payload = { ...form, title: form.title.trim(), dueDate: form.dueDate || null };
-      if (activeTaskId) {
+      const isEditing = Boolean(activeTaskId);
+      if (isEditing) {
         await api.put(`/tasks/${activeTaskId}`, payload);
         setFeedback("Task updated.");
       } else {
@@ -145,7 +212,12 @@ const TaskManager = () => {
       setFormOpen(false);
       setActiveTaskId(null);
       setForm(EMPTY_FORM);
-      await loadTasks();
+      if (!isEditing && currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
+        await loadTasks();
+      }
+      await loadStats();
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to save this task.");
     } finally {
@@ -157,10 +229,11 @@ const TaskManager = () => {
     setError("");
     setFeedback("");
     try {
-      await api.patch(`/tasks/${task._id}/status`, { status });
-      setTasks((current) =>
-        current.map((item) => (item._id === task._id ? { ...item, status } : item))
+      const { data } = await api.patch(`/tasks/${task._id}/status`, { status });
+      setDetailsTask((current) =>
+        current?._id === task._id ? data.task : current
       );
+      await Promise.all([loadTasks(), loadStats()]);
       setFeedback(`Task moved to ${status.toLowerCase()}.`);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to update task status.");
@@ -173,12 +246,88 @@ const TaskManager = () => {
     setFeedback("");
     try {
       await api.delete(`/tasks/${task._id}`);
-      setTasks((current) => current.filter((item) => item._id !== task._id));
+      setDetailsTask((current) => current?._id === task._id ? null : current);
+      await Promise.all([loadTasks(), loadStats()]);
       setFeedback("Task deleted.");
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to delete this task.");
     }
   };
+
+  const openDetails = useCallback(async (task) => {
+    try {
+      const { data } = await api.get(`/tasks/${task._id}`);
+      setDetailsTask(data.task);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to load task details.");
+    }
+  }, []);
+
+  useEffect(() => {
+    const state = location.state;
+    if (!state || consumedLocationState.current === state) return;
+    if (state.openCreate) {
+      consumedLocationState.current = state;
+    } else if (state.selectedTaskId && tasks.length) {
+      const task = tasks.find(({ _id }) => _id === state.selectedTaskId);
+      if (task) {
+        let isActive = true;
+        api
+          .get(`/tasks/${task._id}`)
+          .then(({ data }) => {
+            if (isActive) {
+              consumedLocationState.current = state;
+              setDetailsTask(data.task);
+            }
+          })
+          .catch((requestError) => {
+            if (isActive) {
+              consumedLocationState.current = state;
+              setError(requestError.response?.data?.message || "Unable to load task details.");
+            }
+          });
+        return () => {
+          isActive = false;
+        };
+      }
+      consumedLocationState.current = state;
+    }
+  }, [location.state, tasks]);
+
+  const renderTaskCard = (task, compact = false) => (
+    <article key={task._id} className={`glass glow-border rounded-2xl p-4 transition-all duration-200 hover:shadow-md ${compact ? "" : "sm:p-5"}`}>
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          onClick={() => handleStatus(task, task.status === "Completed" ? "Pending" : "Completed")}
+          className={`mt-0.5 shrink-0 rounded-full ${task.status === "Completed" ? "text-brand-600" : "text-slate-300 hover:text-brand-500"}`}
+          aria-label={task.status === "Completed" ? `Reopen ${task.title}` : `Mark ${task.title} completed`}
+          title={task.status === "Completed" ? "Reopen task" : "Mark complete"}
+        >
+          {task.status === "Completed" ? <CheckCircle2 className="h-5 w-5" /> : <span className="block h-5 w-5 rounded-full border-2 border-current" />}
+        </button>
+        <div className="min-w-0 flex-1">
+          <button type="button" onClick={() => openDetails(task)} className="break-words text-left text-sm font-semibold text-slate-950 hover:text-brand-700">
+            {task.title}
+          </button>
+          {task.description && <p className={`mt-1 text-sm leading-5 text-slate-600 ${compact ? "line-clamp-2" : "line-clamp-2"}`}>{task.description}</p>}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusStyle[task.status]}`}>{task.status}</span>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityStyle[task.priority]}`}>{task.priority}</span>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+            <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />Due {formatDate(task.dueDate)}</span>
+            {!compact && <span>Created {formatDate(task.createdAt)}</span>}
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <button type="button" onClick={() => openDetails(task)} title="View task details" aria-label={`View ${task.title}`} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand-700"><Eye className="h-4 w-4" /></button>
+          <button type="button" onClick={() => beginEdit(task)} title="Edit task" aria-label={`Edit ${task.title}`} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand-700"><SquarePen className="h-4 w-4" /></button>
+          {!compact && <button type="button" onClick={() => handleDelete(task)} title="Delete task" aria-label={`Delete ${task.title}`} className="rounded-lg p-2 text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>}
+        </div>
+      </div>
+    </article>
+  );
 
   const statusStyle = {
     Pending: "text-amber-800 bg-amber-50 border-amber-200",
@@ -295,68 +444,131 @@ const TaskManager = () => {
         )}
 
         <section aria-label="Your tasks">
-          <div className="mb-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 md:grid-cols-[minmax(220px,1fr)_180px_180px]">
+          <div className="mb-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:grid-cols-[minmax(220px,1fr)_170px_170px_150px]">
             <label className="relative block">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tasks" aria-label="Search tasks" className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100" />
+              <input value={search} onChange={(event) => { setLoading(true); setSearch(event.target.value); setCurrentPage(1); }} placeholder="Search tasks..." aria-label="Search tasks" className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100" />
             </label>
-            <select aria-label="Filter by status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100">
+            <select aria-label="Filter by status" value={statusFilter} onChange={(event) => { setLoading(true); setStatusFilter(event.target.value); setCurrentPage(1); }} className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100">
               {["All statuses", "Pending", "In Progress", "Completed"].map((value) => <option key={value}>{value}</option>)}
             </select>
-            <select aria-label="Filter by priority" value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)} className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100">
+            <select aria-label="Filter by priority" value={priorityFilter} onChange={(event) => { setLoading(true); setPriorityFilter(event.target.value); setCurrentPage(1); }} className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100">
               {["All priorities", "Low", "Medium", "High"].map((value) => <option key={value}>{value}</option>)}
             </select>
+            <select aria-label="Sort tasks" value={sortBy} onChange={(event) => { setLoading(true); setSortBy(event.target.value); setCurrentPage(1); }} className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="dueDate">Due Date</option>
+              <option value="priority">Priority</option>
+            </select>
+            <div className="flex items-center justify-between gap-2 lg:col-span-4">
+              <span className="text-xs font-medium text-slate-500">{pagination.totalTasks} {pagination.totalTasks === 1 ? "task" : "tasks"}</span>
+              <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" aria-label="Task view">
+                <button type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"} className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold ${viewMode === "list" ? "bg-white text-brand-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>
+                  <List className="h-3.5 w-3.5" /> List
+                </button>
+                <button type="button" onClick={() => setViewMode("board")} aria-pressed={viewMode === "board"} className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold ${viewMode === "board" ? "bg-white text-brand-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>
+                  <LayoutGrid className="h-3.5 w-3.5" /> Board
+                </button>
+              </div>
+            </div>
           </div>
 
           {loading ? (
-            <div className="glass rounded-2xl px-6 py-16 text-center text-sm text-slate-500" role="status">Loading your tasks...</div>
+            <div className="space-y-3" role="status" aria-label="Loading tasks">
+              {[0, 1, 2].map((item) => <div key={item} className="glass animate-pulse rounded-2xl p-5"><div className="h-4 w-2/5 rounded bg-slate-200" /><div className="mt-3 h-3 w-4/5 rounded bg-slate-100" /><div className="mt-4 h-3 w-1/3 rounded bg-slate-100" /></div>)}
+            </div>
           ) : error && tasks.length === 0 ? (
             <div className="glass rounded-2xl px-6 py-14 text-center">
-              <p className="text-sm text-slate-700">Your tasks could not be loaded.</p>
+              <p className="text-sm text-slate-700">{error}</p>
               <button onClick={() => { setLoading(true); setError(""); loadTasks(); }} className="mt-4 rounded-xl px-4 py-2 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">Try again</button>
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="glass rounded-2xl px-6 py-16 text-center">
               <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-100 bg-brand-50 text-brand-700"><ClipboardList className="h-6 w-6" /></div>
-              <h2 className="text-lg font-semibold tracking-tight text-slate-950">{tasks.length ? "No matching tasks" : "No tasks yet"}</h2>
-              <p className="mt-2 text-sm text-slate-600">{tasks.length ? "Try changing your search or filters." : "Create your first task to get started."}</p>
-              {!tasks.length && <button onClick={beginCreate} className="auth-submit mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"><Plus className="h-4 w-4" />Create task</button>}
+              <h2 className="text-lg font-semibold tracking-tight text-slate-950">{counts.total ? "No matching tasks" : "No tasks yet"}</h2>
+              <p className="mt-2 text-sm text-slate-600">{counts.total ? "Try changing your search or filters." : "Create your first task to get started."}</p>
+              {!counts.total && <button onClick={beginCreate} className="auth-submit mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"><Plus className="h-4 w-4" />Create task</button>}
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredTasks.map((task) => (
-                <article key={task._id} className="glass glow-border rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h2 className="break-words text-base font-semibold tracking-tight text-slate-950 sm:text-lg">{task.title}</h2>
-                        <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusStyle[task.status]}`}>{task.status}</span>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityStyle[task.priority]}`}>{task.priority} priority</span>
-                      </div>
-                      {task.description && <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">{task.description}</p>}
-                      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
-                        <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />Due {formatDate(task.dueDate)}</span>
-                        <span>Created {formatDate(task.createdAt)}</span>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
-                      <label className="sr-only" htmlFor={`status-${task._id}`}>Change status for {task.title}</label>
-                      <select id={`status-${task._id}`} value={task.status} onChange={(event) => handleStatus(task, event.target.value)} className="min-h-10 max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition hover:bg-slate-50 focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
-                        {["Pending", "In Progress", "Completed"].map((status) => <option key={status}>{status}</option>)}
-                      </select>
-                      <button onClick={() => beginEdit(task)} title="Edit task" aria-label={`Edit ${task.title}`} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
-                        <SquarePen className="h-4 w-4" /><span className="sm:hidden lg:inline">Edit</span>
-                      </button>
-                      <button onClick={() => handleDelete(task)} title="Delete task" aria-label={`Delete ${task.title}`} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
-                        <Trash2 className="h-4 w-4" /><span className="sm:hidden lg:inline">Delete</span>
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+            viewMode === "list" ? (
+              <div className="space-y-3">{sortedTasks.map((task) => renderTaskCard(task))}</div>
+            ) : (
+              <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
+                <div className="grid min-w-[850px] grid-cols-3 gap-4">
+                  {["Pending", "In Progress", "Completed"].map((status) => {
+                    const columnTasks = sortedTasks.filter((task) => task.status === status);
+                    return (
+                      <section key={status} aria-label={`${status} tasks`} className="rounded-2xl bg-slate-100/70 p-3">
+                        <header className="mb-3 flex items-center justify-between px-1">
+                          <h2 className="text-sm font-semibold text-slate-800">{status}</h2>
+                          <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-slate-500">{columnTasks.length}</span>
+                        </header>
+                        <div className="space-y-3">
+                          {columnTasks.length
+                            ? columnTasks.map((task) => renderTaskCard(task, true))
+                            : <p className="rounded-xl border border-dashed border-slate-300 px-3 py-6 text-center text-xs text-slate-500">No tasks in this status</p>}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              </div>
+            )
+          )}
+          {pagination.totalPages > 1 && (
+            <nav aria-label="Task pagination" className="mt-5 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                disabled={!pagination.hasPreviousPage}
+                onClick={() => { setLoading(true); setCurrentPage((page) => page - 1); }}
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-slate-600">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={!pagination.hasNextPage}
+                onClick={() => { setLoading(true); setCurrentPage((page) => page + 1); }}
+                className="min-h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </nav>
           )}
         </section>
+
+        {detailsTask && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setDetailsTask(null); }}>
+            <section role="dialog" aria-modal="true" aria-labelledby="task-details-title" className="task-modal w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20 sm:p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Task details</p>
+                  <h2 id="task-details-title" className="mt-2 break-words text-xl font-bold text-slate-950">{detailsTask.title}</h2>
+                </div>
+                <button type="button" onClick={() => setDetailsTask(null)} aria-label="Close task details" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+              </div>
+              <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">{detailsTask.description || "No description provided."}</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusStyle[detailsTask.status]}`}>{detailsTask.status}</span>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityStyle[detailsTask.priority]}`}>{detailsTask.priority} priority</span>
+              </div>
+              <dl className="mt-5 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-2">
+                <div><dt className="text-xs text-slate-500">Due date</dt><dd className="mt-1 font-medium text-slate-800">{formatDate(detailsTask.dueDate)}</dd></div>
+                <div><dt className="text-xs text-slate-500">Created</dt><dd className="mt-1 font-medium text-slate-800">{formatDate(detailsTask.createdAt)}</dd></div>
+                <div className="sm:col-span-2"><dt className="text-xs text-slate-500">Last updated</dt><dd className="mt-1 font-medium text-slate-800">{formatDate(detailsTask.updatedAt)}</dd></div>
+              </dl>
+              <div className="mt-6 flex flex-wrap justify-end gap-2">
+                <button type="button" onClick={() => handleDelete(detailsTask)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 px-3.5 text-sm font-semibold text-red-700 hover:bg-red-50"><Trash2 className="h-4 w-4" /> Delete</button>
+                <button type="button" onClick={() => { beginEdit(detailsTask); setDetailsTask(null); }} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"><SquarePen className="h-4 w-4" /> Edit</button>
+                {detailsTask.status !== "Completed" && <button type="button" onClick={() => handleStatus(detailsTask, "Completed")} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-3.5 text-sm font-semibold text-white hover:bg-brand-700"><CheckCircle2 className="h-4 w-4" /> Mark completed</button>}
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </main>
   );
