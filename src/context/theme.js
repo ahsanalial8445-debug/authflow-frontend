@@ -1,10 +1,8 @@
 import { createContext } from "react";
 
 export const ACCENT_THEMES = [
-  { id: "indigo", label: "Indigo" },
-  { id: "blue", label: "Blue" },
-  { id: "violet", label: "Violet" },
-  { id: "emerald", label: "Emerald" },
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Premium Dark" },
 ];
 
 export const ThemeContext = createContext(null);

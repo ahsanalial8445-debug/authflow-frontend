@@ -5,7 +5,7 @@ const STORAGE_KEY = "authflow-accent-theme";
 
 const getInitialTheme = () => {
   const savedTheme = window.localStorage.getItem(STORAGE_KEY);
-  return ACCENT_THEMES.some(({ id }) => id === savedTheme) ? savedTheme : "indigo";
+  return ACCENT_THEMES.some(({ id }) => id === savedTheme) ? savedTheme : "light";
 };
 
 export const ThemeProvider = ({ children }) => {

@@ -1,14 +1,14 @@
-import { ShieldCheck } from "lucide-react";
+import { CheckSquare } from "lucide-react";
 
 const Brand = ({ size = "md" }) => {
   const dims = size === "lg" ? "h-11 w-11 text-lg" : "h-10 w-10 text-lg";
   return (
     <div className="auth-logo flex items-center gap-3">
       <div className={`brand-soft-shadow ${dims} flex items-center justify-center rounded-xl bg-brand-600 font-bold text-white`}>
-        A
+        <CheckSquare className="h-6 w-6 text-white" />
       </div>
       <span className="text-xl font-bold tracking-tight text-slate-950">
-        Auth<span className="gradient-text">Flow</span>
+        Task<span className="gradient-text">Flow</span>
       </span>
     </div>
   );
@@ -16,9 +16,6 @@ const Brand = ({ size = "md" }) => {
 
 const AuthLayout = ({ children, title, subtitle }) => (
   <main className="auth-page relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 sm:px-6">
-    <div className="auth-orb auth-orb-one" aria-hidden="true" />
-    <div className="auth-orb auth-orb-two" aria-hidden="true" />
-    <div className="auth-orb auth-orb-three" aria-hidden="true" />
     <div className="auth-page-content relative z-10 w-full max-w-[440px]">
       <div className="mb-7 flex justify-center sm:mb-8">
         <Brand size="lg" />
@@ -32,10 +29,6 @@ const AuthLayout = ({ children, title, subtitle }) => (
         )}
         {children}
       </section>
-      <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-500">
-        <ShieldCheck className="h-4 w-4 text-emerald-600" />
-        Your account is protected with secure authentication
-      </p>
     </div>
   </main>
 );

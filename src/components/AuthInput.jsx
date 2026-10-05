@@ -13,11 +13,14 @@ const AuthInput = ({
   disabled,
   autoComplete,
   required = true,
+  showPassword: controlledShowPassword,
+  onTogglePassword,
 }) => {
   const [focused, setFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [internalShowPassword, setInternalShowPassword] = useState(false);
 
   const isPassword = type === "password";
+  const showPassword = controlledShowPassword ?? internalShowPassword;
   const inputType = isPassword && showPassword ? "text" : type;
 
   return (
@@ -77,10 +80,15 @@ const AuthInput = ({
         {isPassword && (
           <button
             type="button"
-            onClick={() => setShowPassword((s) => !s)}
+            onClick={() =>
+              onTogglePassword
+                ? onTogglePassword()
+                : setInternalShowPassword((visible) => !visible)
+            }
+            disabled={disabled}
             className="absolute right-4 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             aria-label={showPassword ? "Hide password" : "Show password"}
-            tabIndex={0}
+            aria-pressed={showPassword}
           >
             <span key={showPassword ? "visible" : "hidden"} className="password-icon">
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}

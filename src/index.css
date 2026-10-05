@@ -1,6 +1,102 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
+@property --color-brand-50 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #eef2ff;
+}
+@property --color-brand-100 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #e0e7ff;
+}
+@property --color-brand-200 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #c7d2fe;
+}
+@property --color-brand-300 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #a5b4fc;
+}
+@property --color-brand-400 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #6366f1;
+}
+@property --color-brand-500 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #4f46e5;
+}
+@property --color-brand-600 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #4338ca;
+}
+@property --color-brand-700 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #3730a3;
+}
+@property --color-brand-800 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #312e81;
+}
+@property --color-brand-900 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1e1b4b;
+}
+@property --app-background {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f3f5fa;
+}
+@property --app-surface {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+@property --app-surface-raised {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f8f9fc;
+}
+@property --app-surface-input {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+@property --app-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #e2e7f0;
+}
+@property --app-border-strong {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #d2d9e5;
+}
+@property --app-text {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #172033;
+}
+@property --app-text-secondary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #475569;
+}
+@property --app-text-muted {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #718096;
+}
+
 @theme {
   /* Indigo brand scale */
   --color-brand-50: #eef2ff;
@@ -28,41 +124,45 @@
   --animate-pulse-slow: pulseSlow 4s ease-in-out infinite;
 }
 
-html[data-theme="blue"] {
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
-  --color-brand-900: #1e3a8a;
+:root {
+  color-scheme: light;
+  --app-background: #f3f5fa;
+  --app-surface: #ffffff;
+  --app-surface-raised: #f8f9fc;
+  --app-surface-input: #ffffff;
+  --app-border: #e2e7f0;
+  --app-border-strong: #d2d9e5;
+  --app-text: #172033;
+  --app-text-secondary: #475569;
+  --app-text-muted: #718096;
 }
-html[data-theme="violet"] {
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-300: #c4b5fd;
-  --color-brand-400: #a78bfa;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #7c3aed;
-  --color-brand-700: #6d28d9;
-  --color-brand-800: #5b21b6;
-  --color-brand-900: #4c1d95;
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-brand-50: #23213f;
+  --color-brand-100: #302d55;
+  --color-brand-200: #423d70;
+  --color-brand-300: #635b9b;
+  --color-brand-400: #a5b4fc;
+  --color-brand-500: #818cf8;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #e0e7ff;
+  --app-background: #0e1626;
+  --app-surface: #151f31;
+  --app-surface-raised: #1b2940;
+  --app-surface-input: #111b2c;
+  --app-border: #29374d;
+  --app-border-strong: #394a63;
+  --app-text: #edf1f8;
+  --app-text-secondary: #c3ccdb;
+  --app-text-muted: #95a3b8;
 }
-html[data-theme="emerald"] {
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-200: #a7f3d0;
-  --color-brand-300: #6ee7b7;
-  --color-brand-400: #34d399;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
-  --color-brand-900: #064e3b;
+
+body {
+  background-color: var(--app-background);
+  color: var(--app-text);
 }
 
 @keyframes float {
@@ -97,10 +197,6 @@ html[data-theme="emerald"] {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes authOrbDrift {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(12px, -16px, 0); }
-}
 @keyframes authGradientDrift {
   0%, 100% { background-position: 0% 0%, 0% 50%; }
   50% { background-position: 100% 100%, 100% 50%; }
@@ -123,8 +219,8 @@ html, body, #root { height: 100%; margin: 0; padding: 0; }
 
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background: #f8fafc;
-  color: #1e293b;
+  background-color: var(--app-background);
+  color: var(--app-text);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -174,7 +270,7 @@ body {
   .bg-radial-glow {
     background: radial-gradient(
       ellipse 70% 45% at 50% 0%,
-      rgba(99, 102, 241, 0.06) 0%,
+      color-mix(in srgb, var(--color-brand-400) 6%, transparent) 0%,
       transparent 70%
     );
   }
@@ -221,41 +317,240 @@ button, a, select, input, textarea {
 .auth-card {
   border-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 24px 80px rgba(30, 41, 59, 0.09), 0 2px 8px rgba(30, 41, 59, 0.035), inset 0 1px rgba(255, 255, 255, 0.9);
-  transition: box-shadow 240ms ease, border-color 240ms ease;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
 }
 .auth-logo { animation: authLogoIn 560ms 80ms cubic-bezier(0.2, 0.75, 0.25, 1) both; }
-.auth-orb {
-  position: absolute;
-  z-index: 0;
-  width: 19rem;
-  height: 19rem;
-  border-radius: 9999px;
-  filter: blur(72px);
-  opacity: 0.38;
-  pointer-events: none;
-  animation: authOrbDrift 14s ease-in-out infinite;
-}
-.auth-orb-one { top: -9rem; left: max(-7rem, calc(50% - 31rem)); background: color-mix(in srgb, var(--color-brand-400) 28%, transparent); }
-.auth-orb-two { right: max(-8rem, calc(50% - 33rem)); bottom: -10rem; background: color-mix(in srgb, var(--color-brand-300) 30%, transparent); animation-delay: -5s; }
-.auth-orb-three { top: 42%; right: max(0rem, calc(50% - 30rem)); width: 12rem; height: 12rem; background: color-mix(in srgb, var(--color-brand-200) 25%, transparent); animation-delay: -9s; }
 .auth-field { transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 .auth-link { text-underline-offset: 4px; }
-.auth-submit { transition: transform 180ms ease, box-shadow 220ms ease, background-color 180ms ease; }
+.auth-submit { transition: transform 150ms ease, box-shadow 180ms ease, background-color 180ms ease; }
 .auth-submit:not(:disabled) { box-shadow: 0 10px 24px color-mix(in srgb, var(--color-brand-600) 21%, transparent); }
 .auth-submit:not(:disabled):hover { box-shadow: 0 13px 28px color-mix(in srgb, var(--color-brand-600) 28%, transparent); }
-.theme-switcher, .glass, .glow-border { transition: color 220ms ease, background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease; }
+.theme-switcher, .glass, .glow-border { transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 .brand-soft-shadow { box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand-600) 20%, transparent); }
 .app-page { animation: authPageIn 300ms ease-out both; }
 .task-modal { animation: modalIn 220ms cubic-bezier(0.2, 0.75, 0.25, 1) both; }
 .password-icon { display: inline-flex; animation: passwordIconIn 160ms ease-out both; }
 .auth-submit:disabled { box-shadow: none; }
 
-@media (max-width: 640px) {
-  .auth-orb { width: 13rem; height: 13rem; filter: blur(58px); }
-  .auth-orb-three { display: none; }
+html[data-theme] * {
+  transition-property: transform, opacity !important;
 }
 
-::selection { background: #c7d2fe; color: #312e81; }
+html[data-theme="dark"] body {
+  background-image:
+    radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--color-brand-500) 5%, transparent), transparent 34rem),
+    linear-gradient(145deg, #111b2c 0%, var(--app-background) 62%);
+  background-color: var(--app-background);
+  color: var(--app-text);
+}
+
+html[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--color-brand-400) 4%, transparent), transparent 34rem),
+    linear-gradient(145deg, #f8f9fc 0%, var(--app-background) 72%);
+}
+
+html[data-theme="light"] .bg-slate-50 {
+  background-color: var(--app-background);
+}
+
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] [class~="bg-white/80"],
+html[data-theme="dark"] [class~="bg-white/85"],
+html[data-theme="dark"] [class~="bg-white/95"] {
+  background-color: var(--app-surface);
+}
+html[data-theme="dark"] .bg-white {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.14), 0 8px 24px rgb(0 0 0 / 0.08);
+}
+html[data-theme="dark"] [class~="bg-white/50"] {
+  background-color: color-mix(in srgb, var(--app-surface) 50%, transparent);
+}
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] main.bg-slate-50 {
+  background-color: var(--app-background);
+}
+html[data-theme="dark"] [class~="bg-slate-50/70"],
+html[data-theme="dark"] [class~="bg-slate-50/80"] {
+  background-color: var(--app-surface);
+}
+html[data-theme="dark"] main.bg-slate-50 {
+  background-image:
+    radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--color-brand-500) 5%, transparent), transparent 34rem),
+    linear-gradient(145deg, #111b2c 0%, var(--app-background) 72%);
+}
+html[data-theme="dark"] .bg-slate-100,
+html[data-theme="dark"] [class~="bg-slate-100/60"] {
+  background-color: var(--app-surface-raised);
+}
+html[data-theme="dark"] .bg-slate-900 {
+  background-color: var(--app-surface-raised);
+}
+html[data-theme="dark"] .bg-brand-50,
+html[data-theme="dark"] [class~="bg-brand-50/50"] {
+  background-color: var(--color-brand-50);
+}
+html[data-theme="dark"] .bg-brand-100 {
+  background-color: var(--color-brand-100);
+}
+html[data-theme="dark"] .bg-red-50,
+html[data-theme="dark"] [class~="bg-red-50/70"] {
+  background-color: #351f2a;
+}
+html[data-theme="dark"] .bg-red-100,
+html[data-theme="dark"] .bg-red-100\/60 {
+  background-color: #452631;
+}
+html[data-theme="dark"] .bg-emerald-50 {
+  background-color: #17332e;
+}
+html[data-theme="dark"] .bg-amber-50 {
+  background-color: #382c1b;
+}
+html[data-theme="dark"] .bg-sky-50 {
+  background-color: #192d42;
+}
+
+html[data-theme="dark"] .text-slate-950,
+html[data-theme="dark"] .text-slate-900,
+html[data-theme="dark"] .text-slate-800 {
+  color: var(--app-text);
+}
+html[data-theme="dark"] .text-slate-700 {
+  color: #d6deea;
+}
+html[data-theme="dark"] .text-slate-600 {
+  color: var(--app-text-secondary);
+}
+html[data-theme="dark"] .text-slate-500,
+html[data-theme="dark"] .text-slate-400 {
+  color: var(--app-text-muted);
+}
+html[data-theme="dark"] .text-brand-700,
+html[data-theme="dark"] .text-brand-600,
+html[data-theme="dark"] .text-brand-500 {
+  color: var(--color-brand-400);
+}
+html[data-theme="dark"] .text-red-800,
+html[data-theme="dark"] .text-red-700,
+html[data-theme="dark"] .text-red-600 {
+  color: #fda4af;
+}
+html[data-theme="dark"] .text-emerald-800,
+html[data-theme="dark"] .text-emerald-700,
+html[data-theme="dark"] .text-emerald-600 {
+  color: #6ee7b7;
+}
+html[data-theme="dark"] .text-amber-800,
+html[data-theme="dark"] .text-amber-700,
+html[data-theme="dark"] .text-amber-600 {
+  color: #fcd38d;
+}
+html[data-theme="dark"] .text-sky-700,
+html[data-theme="dark"] .text-sky-600 {
+  color: #8bd5ff;
+}
+html[data-theme="dark"] .placeholder-slate-400::placeholder {
+  color: #75849a;
+}
+
+html[data-theme="dark"] .border-slate-100,
+html[data-theme="dark"] .border-slate-200,
+html[data-theme="dark"] .border-slate-200\/60,
+html[data-theme="dark"] .border-slate-200\/80,
+html[data-theme="dark"] .border-slate-200\/90,
+html[data-theme="dark"] .border-white\/80 {
+  border-color: var(--app-border);
+}
+html[data-theme="dark"] .border-slate-300 {
+  border-color: var(--app-border-strong);
+}
+html[data-theme="dark"] .border-brand-200 {
+  border-color: var(--color-brand-300);
+}
+html[data-theme="dark"] .border-red-200 {
+  border-color: #653744;
+}
+html[data-theme="dark"] .border-emerald-200 {
+  border-color: #26574b;
+}
+html[data-theme="dark"] .border-amber-200 {
+  border-color: #614b2b;
+}
+
+html[data-theme="dark"] .auth-field,
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: var(--app-surface-input);
+  color: var(--app-text);
+}
+html[data-theme="dark"] .glass {
+  background-color: var(--app-surface);
+  border-color: var(--app-border);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 10px 28px rgb(0 0 0 / 0.12);
+}
+html[data-theme="dark"] .glow-border:hover {
+  border-color: var(--color-brand-300);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.22), 0 0 16px color-mix(in srgb, var(--color-brand-400) 12%, transparent);
+}
+html[data-theme="dark"] .auth-page {
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-brand-500) 13%, transparent), transparent 48%),
+    linear-gradient(145deg, #0b1220 0%, #111a2a 52%, #0b1220 100%);
+}
+html[data-theme="dark"] .auth-card {
+  border-color: var(--app-border);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.28), 0 2px 8px rgb(0 0 0 / 0.18), inset 0 1px rgb(255 255 255 / 0.025);
+}
+html[data-theme="dark"] .auth-submit,
+html[data-theme="dark"] .bg-brand-600 {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-brand-500) 16%, transparent);
+}
+html[data-theme="dark"] .auth-submit:hover {
+  box-shadow: 0 0 22px color-mix(in srgb, var(--color-brand-500) 22%, transparent);
+}
+html[data-theme="dark"] .auth-submit:disabled {
+  box-shadow: none;
+}
+html[data-theme="dark"] .theme-mode-toggle {
+  background-color: var(--app-surface-raised);
+  border-color: var(--app-border);
+  color: var(--app-text-secondary);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.16);
+}
+html[data-theme="dark"] .theme-mode-toggle:hover {
+  background-color: #202e46;
+  border-color: var(--color-brand-300);
+  color: var(--color-brand-400);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--color-brand-400) 10%, transparent);
+}
+html[data-theme="dark"] .theme-mode-icon {
+  background-color: var(--app-surface);
+  border-color: var(--app-border-strong);
+  color: var(--color-brand-400);
+}
+html[data-theme="dark"] .theme-mode-indicator {
+  background-color: var(--color-brand-400);
+  --tw-ring-color: var(--color-brand-100);
+}
+html[data-theme="dark"] [class~="focus-visible:ring-offset-white"] {
+  --tw-ring-offset-color: var(--app-background);
+}
+html[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--app-background);
+}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #34445a;
+}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #475b76;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-900);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
