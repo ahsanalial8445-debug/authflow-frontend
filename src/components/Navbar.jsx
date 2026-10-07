@@ -8,7 +8,6 @@ import {
   X,
   LogIn,
   UserPlus,
-  Bell,
   Moon,
   Sun,
   ChevronDown,
@@ -18,6 +17,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { ACCENT_THEMES } from "../context/theme";
 import { useTheme } from "../context/useTheme";
+import NotificationCenter from "./NotificationCenter";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -190,13 +190,7 @@ const Navbar = () => {
               <div className="hidden lg:block">
                 {themeControl()}
               </div>
-              <span
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-500"
-                title="Notifications are not available yet"
-                aria-label="Notifications are not available yet"
-              >
-                <Bell className="h-4 w-4" />
-              </span>
+              <NotificationCenter />
 
               {/* User Profile */}
               <div
